@@ -36,7 +36,7 @@ function zaloha()
 
     # Absolutní cesta k souboru zaloha.ods
     soubor = "zaloha.ods"
-    cesta = joinpath(@__DIR__, "zaloha", soubor)
+    cesta = joinpath(pkgdir(Martin, "data"), soubor)
 
     # --- První úroveň menu ---
     msg1 = "Vyber"
@@ -77,9 +77,7 @@ function funkce01(cesta::String, sheet::String, soubor::String, msg01::String)
 
     # Převod pomocí nové funkce sprsheetRef()
     Aref = sprsheetRef(ref_end)   # vrací [row, col]
-
     lastrow = Aref[1]
-
     # --------- A texty (sloupec A) ----------
     opt01 = sprsheet2tabl(cesta, sheet, "A3", "A$(lastrow)")
     opt01 = [String(o) for o in opt01]
