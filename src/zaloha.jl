@@ -2,10 +2,14 @@
 ###############################################################
 ## Popis funkce:
 # Zobrazí nabídku zálohování pro hry, software a dokumenty.
-# Data čerpá z tabulky `zaloha.ods` umístěné ve stejné složce 
+# Data čerpá z tabulky `zaloha.toml` umístěné ve stejné složce 
 # jako tato funkce. 
-# ver: 2025-11-20
+# ver: 2021-02-22
 ## Funkce: []=zaloha()
+## Autor: Martin
+# 
+## Cesta uvnitř balíčku:
+# Martin/src/zaloha.jl
 #
 ## Vzor:
 ## []=zaloha()
