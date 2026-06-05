@@ -1,125 +1,190 @@
 ## Funkce Julia
 ###############################################################
 ## Popis funkce:
-# Zobrazí nabídku zálohování pro hry, software a dokumenty.
-# Data čerpá z tabulky `zaloha.toml` umístěné ve stejné složce 
-# jako tato funkce. 
-# ver: 2021-02-22
-## Funkce: []=zaloha()
+# Zobrazi textove menu pro zalohovani her, softwaru a dokumentu.
+# Data cte z tabulky zaloha.ods podle vzoru MATLAB funkce zaloha.m.
+# ver: 2026-06-05
+## Funkce: zaloha()
 ## Autor: Martin
-# 
-## Cesta uvnitř balíčku:
+#
+## Cesta uvnitr balicku:
 # Martin/src/zaloha.jl
 #
 ## Vzor:
-## []=zaloha()
-## Vstupní proměnné:
+# zaloha()
+# zaloha(; auto_choices=[1, 2, 1])
 #
-## Výstupní proměnné:
-#
-## Použité balíčky
-# FilePathsBase, SpravaSouboru
-## Použité funkce:
-#
-## Příklad:
-# >> zaloha()
+## Pouzite balicky
+# SpravaSouboru
+## Pouzite funkce:
+# menutext(), sprdsheet2velkst(), sprsheetRef(), sprsheet2tabl(), zalohovat()
+###############################################################
 
-## Použité proměnné vnitřní:
-#
-using FilePathsBase, SpravaSouboru  # pokud je to balíček projektu – přizpůsobte
-# using menugui, zalohovat  – přidejte podle své struktury
+using SpravaSouboru
 
 """
-    zaloha()
+    zaloha(; spreadsheet=nothing, auto_choices=nothing, execute=true)
 
-Zobrazí nabídku zálohování pro hry, software a dokumenty.
-Data čerpá z tabulky `zaloha.ods` umístěné ve stejné složce jako 
-tato funkce.
+Zobrazi menu pro vyber zalohy podle tabulky `zaloha.ods`.
+
+Volby odpovidaji MATLAB funkci `zaloha.m`:
+- `hry` -> list `games`
+- `software` -> list `software`
+- `dokumenty` -> list `dokumentyWin` nebo `dokumentyLinux` podle OS
+
+Keyword `auto_choices` je urceny hlavne pro testy, napr. `[1, 1, 3]`.
+Pokud `execute=false`, funkce pouze vrati vybranou akci bez spusteni zalohy.
 """
-function zaloha()
+function zaloha(;
+    spreadsheet::Union{Nothing,AbstractString}=nothing,
+    auto_choices::Union{Nothing,AbstractVector{<:Integer}}=nothing,
+    execute::Bool=true,
+)
+    spreadsheet_path = isnothing(spreadsheet) ? _default_zaloha_spreadsheet() : String(spreadsheet)
 
-    # Absolutní cesta k souboru zaloha.ods
-    soubor = "zaloha.ods"
-    cesta = joinpath(pkgdir(Martin, "data"), soubor)
+    categories = [
+        (label="hry", sheet="games", prompt="Vyber hru"),
+        (label="software", sheet="software", prompt="Vyber software"),
+        (
+            label="dokumenty",
+            sheet=Sys.iswindows() ? "dokumentyWin" : "dokumentyLinux",
+            prompt="Vyber dokumenty",
+        ),
+    ]
 
-    # --- První úroveň menu ---
-    msg1 = "Vyber"
-    opt1 = ["hry", "software", "dokumenty"]
-    choice1, _ = menugui(msg1, opt1)
+    category_choice, _ = menutext(
+        "Vyber",
+        [category.label for category in categories];
+        auto_choice=_auto_choice(auto_choices, 1),
+    )
+    category_choice == 0 && return nothing
 
-    if choice1 == 1
-        sheet = "games"
-        msg01 = "Vyber hru"
+    category = categories[category_choice]
+    entries = _read_backup_entries(spreadsheet_path, category.sheet)
+    labels = [entry.label for entry in entries]
 
-    elseif choice1 == 2
-        sheet = "software"
-        msg01 = "Vyber software"
+    item_choice, item_label = menutext(
+        category.prompt,
+        labels;
+        auto_choice=_auto_choice(auto_choices, 2),
+    )
+    item_choice == 0 && return nothing
 
-    elseif choice1 == 3
-        sheet = Sys.iswindows() ? "dokumentyWin" : "dokumentyLinux"
-        msg01 = "Vyber dokumenty"
+    entry = entries[item_choice]
+    action_options = ["zálohovat", "zálohovat a vytvořit .zip", "obnovit"]
+    action_choice, action_label = menutext(
+        "Vyber",
+        action_options;
+        auto_choice=_auto_choice(auto_choices, 3),
+    )
+    action_choice == 0 && return nothing
 
-    else
-        return
+    plan = (
+        category=category.label,
+        sheet=category.sheet,
+        item=item_label,
+        action=action_label,
+        source=entry.source,
+        destination=entry.destination,
+    )
+
+    execute && _run_backup_action(action_choice, entry.source, entry.destination)
+    return plan
+end
+
+function _default_zaloha_spreadsheet()
+    package_root = normpath(joinpath(@__DIR__, ".."))
+    candidates = [
+        joinpath(@__DIR__, "zaloha.ods"),
+        joinpath(package_root, "data", "zaloha.ods"),
+        joinpath(package_root, "zaloha.ods"),
+        normpath(joinpath(package_root, "..", "FunkceMATLAB", "SpravaSouboru", "zaloha.ods")),
+    ]
+
+    for path in candidates
+        isfile(path) && return path
     end
 
-    # Druhá úroveň
-    choice001, source, destination =
-        funkce01(cesta, sheet, soubor, msg01)
-
-    # Třetí úroveň
-    akceVSE(choice001, source, destination)
+    error(
+        "Soubor zaloha.ods nebyl nalezen. Zadej cestu pomoci keywordu " *
+        "`spreadsheet=\"cesta/k/zaloha.ods\"`.",
+    )
 end
 
-function funkce01(cesta::String, sheet::String, soubor::String, msg01::String)
+function _read_backup_entries(spreadsheet_path::String, sheet::String)
+    isfile(spreadsheet_path) || error("Soubor nebyl nalezen: $spreadsheet_path")
 
-    # Získání rozsahu dat, např. "A3:C17"
-    rozsah = sprdsheet2velkst(cesta, sheet)
+    full_range = sprdsheet2velkst(spreadsheet_path, sheet)
+    isempty(full_range) && error("List '$sheet' v souboru '$spreadsheet_path' je prazdny.")
 
-    # Pravá horní buňka—například "C17"
-    ref_end = last(split(rozsah, ":"))
+    last_ref = last(split(full_range, ":"))
+    last_row = sprsheetRef(last_ref)[1]
+    last_row >= 3 || error("List '$sheet' neobsahuje zadne polozky od radku 3.")
 
-    # Převod pomocí nové funkce sprsheetRef()
-    Aref = sprsheetRef(ref_end)   # vrací [row, col]
-    lastrow = Aref[1]
-    # --------- A texty (sloupec A) ----------
-    opt01 = sprsheet2tabl(cesta, sheet, "A3", "A$(lastrow)")
-    opt01 = [String(o) for o in opt01]
+    folder = dirname(spreadsheet_path)
+    spreadsheet_file = basename(spreadsheet_path)
+    cache_file = _cache_filename(spreadsheet_file, sheet)
 
-    choice01, _ = menugui(msg01, opt01)
-    println("Vybráno: ", opt01[choice01])
+    labels_raw, sources_raw, destinations_raw = sprsheet2tabl(
+        folder,
+        [spreadsheet_file, cache_file],
+        sheet,
+        ["A3:A$(last_row)", "B3:B$(last_row)", "C3:C$(last_row)"],
+    )
 
-    # --------- B zdroje ----------
-    source01 = sprsheet2tabl(cesta, sheet, "B3", "B$(lastrow)")
-    source = String(source01[choice01])
+    labels = _flatten_cells(labels_raw)
+    sources = _flatten_cells(sources_raw)
+    destinations = _flatten_cells(destinations_raw)
+    row_count = minimum(length.((labels, sources, destinations)))
 
-    # --------- C destinace ----------
-    destination01 = sprsheet2tabl(cesta, sheet, "C3", "C$(lastrow)")
-    destination = String(destination01[choice01])
+    entries = NamedTuple{(:label, :source, :destination),Tuple{String,String,String}}[]
+    for i in 1:row_count
+        label = _cell_to_string(labels[i])
+        source = _cell_to_string(sources[i])
+        destination = _cell_to_string(destinations[i])
 
-    # --------- Akce ----------
-    msg001 = "Vyber"
-    opt001 = ["zálohovat", "zálohovat a vytvořit .zip", "obnovit"]
-
-    choice001, _ = menugui(msg001, opt001)
-    println("Vybráno: ", opt001[choice001])
-
-    return choice001, source, destination
-end
-
-function akceVSE(choice001::Int, source::String, destination::String)
-
-    if choice001 == 1
-        zalohovat(source, destination, "zalohovat") # Pouze zálohovat
-
-    elseif choice001 == 2
-        zalohovat(source, destination, "zalohovat") # Nejprve zálohovat
-
-        cd(destination) do # Přepnout do cílové složky
-            zalohovat(source, destination, "zipnout") # Vytvořit .zip
+        if !isempty(label) && !isempty(source) && !isempty(destination)
+            push!(entries, (label=label, source=source, destination=destination))
         end
-
-    elseif choice001 == 3
-        zalohovat(source, destination, "obnovit") # Obnovit
     end
+
+    isempty(entries) && error("List '$sheet' neobsahuje zadne platne radky ve sloupcich A:C.")
+    return entries
+end
+
+function _run_backup_action(action_choice::Int, source::String, destination::String)
+    if action_choice == 1
+        zalohovat(source, destination, "zalohovat")
+    elseif action_choice == 2
+        zalohovat(source, destination, "zalohovat")
+        zalohovat(source, destination, "zipnout")
+    elseif action_choice == 3
+        zalohovat(source, destination, "obnovit")
+    else
+        throw(ArgumentError("Neznama akce: $action_choice"))
+    end
+
+    return nothing
+end
+
+function _auto_choice(auto_choices::Union{Nothing,AbstractVector{<:Integer}}, index::Int)
+    isnothing(auto_choices) && return nothing
+    index <= length(auto_choices) || return nothing
+    return Int(auto_choices[index])
+end
+
+function _cache_filename(spreadsheet_file::String, sheet::String)
+    base = splitext(spreadsheet_file)[1]
+    safe_sheet = replace(sheet, r"[^A-Za-z0-9_-]" => "_")
+    return "$(base)_$(safe_sheet)_sprsheet2tabl.jld2"
+end
+
+function _flatten_cells(value)
+    value isa AbstractArray && return collect(vec(value))
+    return Any[value]
+end
+
+function _cell_to_string(value)
+    (ismissing(value) || value === nothing) && return ""
+    return strip(string(value))
 end
