@@ -1,6 +1,6 @@
 name = "Martin"
 uuid = "3a38f05e-6559-421a-b1bb-ee36a85f9a7a"
-version = "0.1.2"
+version = "0.1.4"
 authors = ["Martin"]
 
 [deps]
@@ -17,6 +17,6 @@ test = ["Test"]
 [compat]
 julia = "1.12"
 
-FilePathsBase = "0.9"
-XLSX = "0.10"
-SpravaSouboru = "0.1"
+FilePathsBase = "0"
+XLSX = "0"
+SpravaSouboru = "0"
