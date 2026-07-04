@@ -74,27 +74,27 @@ end
 function funkce01(cesta::String, sheet::String, soubor::String, msg01::String)
 
     # Získání rozsahu dat, např. "A3:C17"
-    rozsah = sprdsheet2velkst(cesta, sheet)
+    rozsah = SpravaSouboru.sprdsheet2velkst(cesta, sheet)
 
     # Pravá horní buňka—například "C17"
     ref_end = last(split(rozsah, ":"))
 
     # Převod pomocí nové funkce sprsheetRef()
-    Aref = sprsheetRef(ref_end)   # vrací [row, col]
+    Aref = SpravaSouboru.sprsheetRef(ref_end)   # vrací [row, col]
     lastrow = Aref[1]
     # --------- A texty (sloupec A) ----------
-    opt01 = sprsheet2tabl(cesta, sheet, "A3", "A$(lastrow)")
+    opt01 = SpravaSouboru.sprsheet2tabl(cesta, sheet, "A3", "A$(lastrow)")
     opt01 = [String(o) for o in opt01]
 
     choice01, _ = menugui(msg01, opt01)
     println("Vybráno: ", opt01[choice01])
 
     # --------- B zdroje ----------
-    source01 = sprsheet2tabl(cesta, sheet, "B3", "B$(lastrow)")
+    source01 = SpravaSouboru.sprsheet2tabl(cesta, sheet, "B3", "B$(lastrow)")
     source = String(source01[choice01])
 
     # --------- C destinace ----------
-    destination01 = sprsheet2tabl(cesta, sheet, "C3", "C$(lastrow)")
+    destination01 = SpravaSouboru.sprsheet2tabl(cesta, sheet, "C3", "C$(lastrow)")
     destination = String(destination01[choice01])
 
     # --------- Akce ----------
