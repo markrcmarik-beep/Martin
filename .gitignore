@@ -20,7 +20,7 @@ artifacts/
 data/
 outputs/
 plots/
-*.csv
+
 *.png
 *.pdf
 
