@@ -1,9 +1,9 @@
 ## Funkce Julia
 ###############################################################
 ## Popis funkce:
-# Zobrazi textove menu pro zalohovani her, softwaru a dokumentu.
-# Data cte z tabulky zaloha.ods podle vzoru MATLAB funkce zaloha.m.
-# ver: 2026-06-05
+# Zobrazí textové menu pro zálohování her, softwaru a dokumentů.
+# Data čte z konfiguračního souboru zaloha.toml.
+# ver: 2026-07-17 (aktualizováno pro TOML)
 ## Funkce: zaloha()
 ## Autor: Martin
 #
@@ -12,35 +12,38 @@
 #
 ## Vzor:
 # zaloha()
-# zaloha(; auto_choices=[1, 2, 1])
+# zaloha(; auto_choices=[1, 2, 1], execute=false)
 #
 ## Pouzite balicky
 # SpravaSouboru
+# TOML (standardní knihovna)
 ## Pouzite funkce:
-# menutext(), sprdsheet2velkst(), sprsheetRef(), sprsheet2tabl(), zalohovat()
+# menutext(), zalohovat()
 ###############################################################
 
 using SpravaSouboru
+using TOML
 
 """
-    zaloha(; spreadsheet=nothing, auto_choices=nothing, execute=true)
+    zaloha(; config=nothing, auto_choices=nothing, execute=true)
 
-Zobrazi menu pro vyber zalohy podle tabulky `zaloha.ods`.
+Zobrazí menu pro výběr zálohy podle konfiguračního souboru `zaloha.toml`.
 
 Volby odpovidaji MATLAB funkci `zaloha.m`:
 - `hry` -> list `games`
 - `software` -> list `software`
 - `dokumenty` -> list `dokumentyWin` nebo `dokumentyLinux` podle OS
 
-Keyword `auto_choices` je urceny hlavne pro testy, napr. `[1, 1, 3]`.
-Pokud `execute=false`, funkce pouze vrati vybranou akci bez spusteni zalohy.
+Keyword `auto_choices` je určený hlavně pro testy, např. `[1, 1, 3]`.
+Pokud `execute=false`, funkce pouze vrátí vybranou akci bez spuštění zálohy.
 """
 function zaloha(;
-    spreadsheet::Union{Nothing,AbstractString}=nothing,
+    config::Union{Nothing,AbstractString}=nothing,
     auto_choices::Union{Nothing,AbstractVector{<:Integer}}=nothing,
     execute::Bool=true,
 )
-    spreadsheet_path = isnothing(spreadsheet) ? _default_zaloha_spreadsheet() : String(spreadsheet)
+    config_path = isnothing(config) ? _default_zaloha_config() : String(config)
+    config_data = TOML.parsefile(config_path)
 
     categories = [
         (label="hry", sheet="games", prompt="Vyber hru"),
@@ -52,25 +55,27 @@ function zaloha(;
         ),
     ]
 
+    # 1. Výběr kategorie (hry, software, dokumenty)
     category_choice, _ = menutext(
         "Vyber",
         [category.label for category in categories];
         auto_choice=_auto_choice(auto_choices, 1),
     )
     category_choice == 0 && return nothing
-
     category = categories[category_choice]
-    entries = _read_backup_entries(spreadsheet_path, category.sheet)
-    labels = [entry.label for entry in entries]
 
+    # 2. Výběr položky v kategorii
+    entries, prompt_from_config = _read_backup_entries(config_data, category.sheet)
+    labels = [entry.label for entry in entries]
     item_choice, item_label = menutext(
-        category.prompt,
+        prompt_from_config, # Použití promptu z TOML souboru
         labels;
         auto_choice=_auto_choice(auto_choices, 2),
     )
     item_choice == 0 && return nothing
-
     entry = entries[item_choice]
+
+    # 3. Výběr akce (zálohovat, zip, obnovit)
     action_options = ["zálohovat", "zálohovat a vytvořit .zip", "obnovit"]
     action_choice, action_label = menutext(
         "Vyber",
@@ -92,64 +97,43 @@ function zaloha(;
     return plan
 end
 
-function _default_zaloha_spreadsheet()
-    package_root = normpath(joinpath(@__DIR__, ".."))
-    candidates = [
-        joinpath(@__DIR__, "zaloha.ods"),
-        joinpath(package_root, "data", "zaloha.ods"),
-        joinpath(package_root, "zaloha.ods"),
-        normpath(joinpath(package_root, "..", "FunkceMATLAB", "SpravaSouboru", "zaloha.ods")),
-    ]
+const _DEFAULT_CONFIG_NAME = "zaloha.toml"
 
-    for path in candidates
-        isfile(path) && return path
-    end
-
-    error(
-        "Soubor zaloha.ods nebyl nalezen. Zadej cestu pomoci keywordu " *
-        "`spreadsheet=\"cesta/k/zaloha.ods\"`.",
-    )
+"""
+Najde výchozí konfigurační soubor `zaloha.toml`.
+Priorita je soubor v `src/` adresáři balíčku.
+"""
+function _default_zaloha_config()
+    # Primárně hledá soubor ve stejném adresáři jako tento skript
+    config_path = joinpath(@__DIR__, _DEFAULT_CONFIG_NAME)
+    isfile(config_path) && return config_path
+    
+    error("Konfigurační soubor '$_DEFAULT_CONFIG_NAME' nebyl nalezen v adresáři 'src/'. " *
+          "Zadejte cestu pomocí `config=\"cesta/k/zaloha.toml\"`.")
 end
 
-function _read_backup_entries(spreadsheet_path::String, sheet::String)
-    isfile(spreadsheet_path) || error("Soubor nebyl nalezen: $spreadsheet_path")
-
-    full_range = sprdsheet2velkst(spreadsheet_path, sheet)
-    isempty(full_range) && error("List '$sheet' v souboru '$spreadsheet_path' je prazdny.")
-
-    last_ref = last(split(full_range, ":"))
-    last_row = sprsheetRef(last_ref)[1]
-    last_row >= 3 || error("List '$sheet' neobsahuje zadne polozky od radku 3.")
-
-    folder = dirname(spreadsheet_path)
-    spreadsheet_file = basename(spreadsheet_path)
-    cache_file = _cache_filename(spreadsheet_file, sheet)
-
-    labels_raw, sources_raw, destinations_raw = sprsheet2tabl(
-        folder,
-        [spreadsheet_file, cache_file],
-        sheet,
-        ["A3:A$(last_row)", "B3:B$(last_row)", "C3:C$(last_row)"],
-    )
-
-    labels = _flatten_cells(labels_raw)
-    sources = _flatten_cells(sources_raw)
-    destinations = _flatten_cells(destinations_raw)
-    row_count = minimum(length.((labels, sources, destinations)))
+"""
+Načte a zvaliduje položky zálohy z již načtených dat z TOML souboru.
+"""
+function _read_backup_entries(config_data::Dict, sheet::String)::Tuple{Vector, String}
+    haskey(config_data, sheet) || error("Sekce '$sheet' v konfiguračním souboru chybí.")
+    
+    sheet_data = config_data[sheet]
+    haskey(sheet_data, "entries") || error("V sekci '$sheet' chybí klíč 'entries'.")
 
     entries = NamedTuple{(:label, :source, :destination),Tuple{String,String,String}}[]
-    for i in 1:row_count
-        label = _cell_to_string(labels[i])
-        source = _cell_to_string(sources[i])
-        destination = _cell_to_string(destinations[i])
-
-        if !isempty(label) && !isempty(source) && !isempty(destination)
+    for entry_dict in sheet_data["entries"]
+        label = get(entry_dict, "label", "")
+        source = get(entry_dict, "source", "")
+        destination = get(entry_dict, "destination", "")
+        
+        !isempty(label) && !isempty(source) && !isempty(destination) &&
             push!(entries, (label=label, source=source, destination=destination))
-        end
     end
 
-    isempty(entries) && error("List '$sheet' neobsahuje zadne platne radky ve sloupcich A:C.")
-    return entries
+    isempty(entries) && error("Sekce '$sheet' neobsahuje žádné platné položky pro zálohu.")
+    prompt = get(sheet_data, "prompt", "Vyber položku") # Výchozí hodnota, pokud by chyběl
+    return entries, prompt
 end
 
 function _run_backup_action(action_choice::Int, source::String, destination::String)
@@ -171,20 +155,4 @@ function _auto_choice(auto_choices::Union{Nothing,AbstractVector{<:Integer}}, in
     isnothing(auto_choices) && return nothing
     index <= length(auto_choices) || return nothing
     return Int(auto_choices[index])
-end
-
-function _cache_filename(spreadsheet_file::String, sheet::String)
-    base = splitext(spreadsheet_file)[1]
-    safe_sheet = replace(sheet, r"[^A-Za-z0-9_-]" => "_")
-    return "$(base)_$(safe_sheet)_sprsheet2tabl.jld2"
-end
-
-function _flatten_cells(value)
-    value isa AbstractArray && return collect(vec(value))
-    return Any[value]
-end
-
-function _cell_to_string(value)
-    (ismissing(value) || value === nothing) && return ""
-    return strip(string(value))
 end
