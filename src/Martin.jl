@@ -16,6 +16,7 @@ module Martin
 include("zaloha.jl")
 include("zalohatext.jl")
 include("zalohaokno.jl")
+include("_zaloha_impl.jl")
 
 export zaloha, zalohatext, zalohaokno
 
