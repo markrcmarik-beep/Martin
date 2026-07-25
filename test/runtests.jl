@@ -1,6 +1,7 @@
-# ver: 2026-07-01
+# ver: 2026-07-25
 using Test
 
-    include("zaloha_test.jl")
+    include("zalohatext_test.jl")
+    
     nothing
     
