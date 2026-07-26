@@ -1,0 +1,41 @@
+# Konfigurace pro zaloha.jl
+
+[games]
+prompt = "Vyber hru"
+entries = [
+    { label = "Commandos 2 HD Remake", source = "C:\\Users\\markr\\AppData\\LocalLow\\Kalypso Media Group GmbH\\Commandos 2 HD Remaster", destination = "C:\\Users\\markr\\OneDrive\\zaloha\\Commandos 2 HD Remaster" },
+    { label = "Rally Trophy (2001)", source = "C:\\Users\\markr\\AppData\\Local\\VirtualStore\\Program Files (x86)\\Rally Trophy", destination = "C:\\Users\\markr\\OneDrive\\zaloha\\Rally Trophy (2001)" },
+    { label = "Kingdom Come Deliverance", source = "C:\\Users\\markr\\Saved Games\\kingdomcome", destination = "C:\\Users\\markr\\OneDrive\\zaloha\\Kingdom Come - Deliverance" },
+    { label = "Kingdom Come Deliverance 2", source = "C:\\Users\\markr\\Saved Games\\kingdomcome2", destination = "C:\\Users\\markr\\OneDrive\\zaloha\\Kingdom Come - Deliverance II" },
+]
+
+[software]
+prompt = "Vyber software"
+entries = [
+    { label = "PotPlayer (StolniMartin) (OneDrive)", source = "C:\\Users\\markr\\AppData\\Roaming\\PotPlayerMini64", destination = "C:\\Users\\markr\\OneDrive\\Martin\\zaloha\\PotPlayer\\StolniMartin" },
+    { label = "PotPlayer (StolniPavlina) (OneDrive)", source = "C:\\Users\\markr\\AppData\\Roaming\\PotPlayerMini64", destination = "C:\\Users\\markr\\OneDrive\\Martin\\zaloha\\PotPlayer\\StolniPavlina" },
+    { label = "PotPlayer (Lenovo-PC) (OneDrive)", source = "C:\\Users\\markr\\AppData\\Roaming\\PotPlayerMini64", destination = "C:\\Users\\markr\\OneDrive\\Martin\\zaloha\\PotPlayer\\Lenovo-PC" },
+    { label = "PotPlayer (Acer2017) (OneDrive)", source = "C:\\Users\\markr\\AppData\\Roaming\\PotPlayerMini64", destination = "C:\\Users\\markr\\OneDrive\\Martin\\zaloha\\PotPlayer\\Acer2017" },
+    { label = "PotPlayer (StolniMartin) (dokumenty)", source = "C:\\Users\\markr\\AppData\\Roaming\\PotPlayerMini64", destination = "C:\\Users\\markr\\Martin\\zaloha\\PotPlayer\\StolniMartin" },
+    { label = "PotPlayer (StolniPavlina) (dokumenty)", source = "C:\\Users\\markr\\AppData\\Roaming\\PotPlayerMini64", destination = "C:\\Users\\markr\\Martin\\zaloha\\PotPlayer\\StolniPavlina" },
+    { label = "PotPlayer (Lenovo-PC) (dokumenty)", source = "C:\\Users\\markr\\AppData\\Roaming\\PotPlayerMini64", destination = "C:\\Users\\markr\\Martin\\zaloha\\PotPlayer\\Lenovo-PC" },
+    { label = "PotPlayer (Acer2017) (dokumenty)", source = "C:\\Users\\markr\\AppData\\Roaming\\PotPlayerMini64", destination = "C:\\Users\\markr\\Martin\\zaloha\\PotPlayer\\Acer2017" },
+    { label = "PotPlayer (playlist) (OneDrive)", source = "C:\\Users\\markr\\AppData\\Roaming\\PotPlayerMini64\\Playlist", destination = "C:\\Users\\markr\\OneDrive\\Martin\\zaloha\\PotPlayer" },
+]
+
+[dokumentyWin]
+prompt = "Vyber dokumenty (Windows)"
+entries = [
+    { label = "ProjektyTechnika (OneDrive)", source = "C:\\Users\\markr\\ProjektyTechnika", destination = "C:\\Users\\markr\\OneDrive" },
+    { label = "Martin (OneDrive)", source = "C:\\Users\\markr\\Martin", destination = "C:\\Users\\markr\\OneDrive" },
+    { label = "ProjektyTechnika (Pcloud)", source = "C:\\Users\\markr\\ProjektyTechnika", destination = "P:\\MartinDokumenty" },
+    { label = "Martin (Pcloud)", source = "C:\\Users\\markr\\Martin", destination = "P:\\MartinDokumenty" },
+]
+
+[dokumentyLinux]
+prompt = "Vyber dokumenty (Linux)"
+entries = [
+    { label = "Domovský adresář", source = "/home/markr", destination = "/media/zaloha/home" },
+    { label = "ProjektyTechnika (Pcloud)", source = "C:\\Users\\markr\\ProjektyTechnika", destination = "C:\\Users\\markr\\OneDrive\\ProjektyTechnika" },
+    { label = "Martin (Pcloud)", source = "C:\\Users\\markr\\Martin", destination = "C:\\Users\\markr\\OneDrive\\Martin" },
+]
