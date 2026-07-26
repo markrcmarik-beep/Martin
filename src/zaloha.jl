@@ -7,16 +7,20 @@
 ## Funkce: zaloha()
 ## Autor: Martin
 #
-## Cesta uvnitr balicku:
+## Cesta uvnitř balíčku:
 # Martin/src/zaloha.jl
 #
 ## Vzor:
 # zaloha()
 # zaloha(; auto_choices=[1, 2, 1], execute=false)
 #
-## Pouzite balicky
+## Vstupní proměnné:
 #
-## Pouzite funkce:
+## Výstupní proměnné:
+#
+## Použité balíčky
+#
+## Použité funkce:
 # zalohatext()
 ###############################################################
 
