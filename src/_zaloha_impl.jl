@@ -2,7 +2,7 @@
 ###############################################################
 ## Popis funkce:
 #
-# ver: 2026-07-25
+# ver: 2026-07-27
 ## Funkce: Martin._zaloha_impl()
 ## Autor: Martin
 #
@@ -140,8 +140,8 @@ function _run_backup_action(action_choice::Int, source::String, destination::Str
     return nothing
 end
 
-function _auto_choice(auto_choices::Union{Nothing,AbstractVector{<:Integer}}, index::Int)
-    isnothing(auto_choices) && return nothing
-    index <= length(auto_choices) || return nothing
-    return Int(auto_choices[index])
+_auto_choice(::Nothing, ::Int) = nothing
+function _auto_choice(auto_choices::AbstractVector{<:Integer}, index::Int)
+    (1 <= index <= length(auto_choices)) || return nothing
+    return @inbounds Int(auto_choices[index])
 end
