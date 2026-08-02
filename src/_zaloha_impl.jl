@@ -2,7 +2,7 @@
 ###############################################################
 ## Popis funkce:
 #
-# ver: 2026-07-27
+# ver: 2026-08-01
 ## Funkce: Martin._zaloha_impl()
 ## Autor: Martin
 #
@@ -39,7 +39,7 @@ function _zaloha_impl(
         (label="software", sheet="software", prompt="Vyber software"),
         (
             label="dokumenty",
-            sheet=Sys.iswindows() ? "dokumentyWin" : "dokumentyLinux",
+            sheet= (Sys.iswindows() ? "dokumentyWin" : (Sys.islinux() ? "dokumentyLinux" : error("Nepodporovaný OS: $(Sys.KERNEL)"))),
             prompt="Vyber dokumenty",
         ),
     ]
