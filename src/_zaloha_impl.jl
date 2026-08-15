@@ -2,7 +2,7 @@
 ###############################################################
 ## Popis funkce:
 #
-# ver: 2026-08-01
+# ver: 2026-08-15
 ## Funkce: Martin._zaloha_impl()
 ## Autor: Martin
 #
@@ -86,13 +86,14 @@ function _zaloha_impl(
     return plan
 end
 
-const _DEFAULT_CONFIG_NAME = "zaloha.toml"
+#const _DEFAULT_CONFIG_NAME = "zaloha.toml"
 
 """
 Najde výchozí konfigurační soubor `zaloha.toml`.
 Priorita je soubor v `src/` adresáři balíčku.
 """
 function _default_zaloha_config()
+    _DEFAULT_CONFIG_NAME = "zaloha.toml"
     # Primárně hledá soubor ve stejném adresáři jako tento skript
     config_path = joinpath(@__DIR__, _DEFAULT_CONFIG_NAME)
     isfile(config_path) && return config_path
