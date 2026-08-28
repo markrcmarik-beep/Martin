@@ -1,4 +1,7 @@
 # Konfigurace pro zaloha.jl
+# *uzivatel* - složka uživatele např: C:\\Users\\markr
+# *dokumenty* - složka dokumentů např: 
+# / \ - oddělení složek zápis cesty
 
 [games]
 prompt = "Vyber hru"
