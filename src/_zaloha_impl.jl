@@ -2,7 +2,7 @@
 ###############################################################
 ## Popis funkce:
 #
-# ver: 2026-08-15
+# ver: 2026-08-28
 ## Funkce: Martin._zaloha_impl()
 ## Autor: Martin
 #
@@ -31,63 +31,8 @@ function _zaloha_impl(
     auto_choices::Union{Nothing,AbstractVector{<:Integer}}=nothing,
     execute::Bool=true,
 )
-    config_path = isnothing(config) ? _default_zaloha_config() : String(config)
-    config_data = TOML.parsefile(config_path)
-
-    categories = [
-        (label="hry", sheet="games", prompt="Vyber hru"),
-        (label="software", sheet="software", prompt="Vyber software"),
-        (
-            label="dokumenty",
-            sheet= (Sys.iswindows() ? "dokumentyWin" : (Sys.islinux() ? "dokumentyLinux" : error("Nepodporovaný OS: $(Sys.KERNEL)"))),
-            prompt="Vyber dokumenty",
-        ),
-    ]
-
-    # 1. Výběr kategorie (hry, software, dokumenty)
-    category_choice, _ = menu_func(
-        "Vyber",
-        [category.label for category in categories];
-        auto_choice=_auto_choice(auto_choices, 1),
-    )
-    category_choice == 0 && return nothing
-    category = categories[category_choice]
-
-    # 2. Výběr položky v kategorii
-    entries, prompt_from_config = _read_backup_entries(config_data, category.sheet)
-    labels = [entry.label for entry in entries]
-    item_choice, item_label = menu_func(
-        prompt_from_config, # Použití promptu z TOML souboru
-        labels;
-        auto_choice=_auto_choice(auto_choices, 2),
-    )
-    item_choice == 0 && return nothing
-    entry = entries[item_choice]
-
-    # 3. Výběr akce (zálohovat, zip, obnovit)
-    action_options = ["zálohovat", "zálohovat a vytvořit .zip", "obnovit"]
-    action_choice, action_label = menu_func(
-        "Vyber",
-        action_options;
-        auto_choice=_auto_choice(auto_choices, 3),
-    )
-    action_choice == 0 && return nothing
-
-    plan = (
-        category=category.label,
-        sheet=category.sheet,
-        item=item_label,
-        action=action_label,
-        source=entry.source,
-        destination=entry.destination,
-    )
-
-    execute && _run_backup_action(action_choice, entry.source, entry.destination)
-    return plan
-end
-
-#const _DEFAULT_CONFIG_NAME = "zaloha.toml"
-
+#---------------------------------------------------------------------
+# pomocné funkce
 """
 Najde výchozí konfigurační soubor `zaloha.toml`.
 Priorita je soubor v `src/` adresáři balíčku.
@@ -146,3 +91,63 @@ function _auto_choice(auto_choices::AbstractVector{<:Integer}, index::Int)
     (1 <= index <= length(auto_choices)) || return nothing
     return @inbounds Int(auto_choices[index])
 end
+#---------------------------------------------------------------------
+# pomocné funkce konec
+    config_path = isnothing(config) ? _default_zaloha_config() : String(config)
+    config_data = TOML.parsefile(config_path)
+
+    categories = [
+        (label="hry", 
+        sheet=(Sys.iswindows() ? "gamesWin" : (Sys.islinux() ? "gamesLinux" : error("Nepodporovaný OS: $(Sys.KERNEL)"))), 
+        prompt="Vyber hru"),
+        (label="software", 
+        sheet=(Sys.iswindows() ? "softwareWin" : (Sys.islinux() ? "softwareLinux" : error("Nepodporovaný OS: $(Sys.KERNEL)"))), 
+        prompt="Vyber software"),
+        (label="dokumenty",
+        sheet= (Sys.iswindows() ? "dokumentyWin" : (Sys.islinux() ? "dokumentyLinux" : error("Nepodporovaný OS: $(Sys.KERNEL)"))),
+        prompt="Vyber dokumenty"),
+    ]
+
+    # 1. Výběr kategorie (hry, software, dokumenty)
+    category_choice, _ = menu_func(
+        "Vyber",
+        [category.label for category in categories];
+        auto_choice=_auto_choice(auto_choices, 1),
+    )
+    category_choice == 0 && return nothing
+    category = categories[category_choice]
+
+    # 2. Výběr položky v kategorii
+    entries, prompt_from_config = _read_backup_entries(config_data, category.sheet)
+    labels = [entry.label for entry in entries]
+    item_choice, item_label = menu_func(
+        prompt_from_config, # Použití promptu z TOML souboru
+        labels;
+        auto_choice=_auto_choice(auto_choices, 2),
+    )
+    item_choice == 0 && return nothing
+    entry = entries[item_choice]
+
+    # 3. Výběr akce (zálohovat, zip, obnovit)
+    action_options = ["zálohovat", "zálohovat a vytvořit .zip", "obnovit"]
+    action_choice, action_label = menu_func(
+        "Vyber",
+        action_options;
+        auto_choice=_auto_choice(auto_choices, 3),
+    )
+    action_choice == 0 && return nothing
+
+    plan = (
+        category=category.label,
+        sheet=category.sheet,
+        item=item_label,
+        action=action_label,
+        source=entry.source,
+        destination=entry.destination,
+    )
+
+    execute && _run_backup_action(action_choice, entry.source, entry.destination)
+    return plan
+end
+
+#const _DEFAULT_CONFIG_NAME = "zaloha.toml"
