@@ -1,6 +1,8 @@
 # Konfigurace pro zaloha.jl
 # *uzivatel* - složka uživatele např: C:\\Users\\markr
-# *dokumenty* - složka dokumentů např: 
+# *dokumenty* - složka dokumentů např: C:\\Users\\markr\\Documents
+# *onedrive* - složka OneDrive např: C:\\Users\\markr\\OneDrive
+# *pcloud* - složka Pcloud např: P:\\
 # / \ - oddělení složek zápis cesty
 
 [gamesWin]
