@@ -1,8 +1,8 @@
-## Balíček Julia v1.12
+## Balíček Julia v1.13
 ###############################################################
 ## Popis balíčku
 #
-# ver: 2026-07-25
+# ver: 2026-11-04
 ## Cesta uvnitř balíčku:
 # Martin/src/Martin.jl
 #
@@ -11,8 +11,12 @@
 ###############################################################
 ## Použité proměnné vnitřní:
 #
+"""
+$(read(joinpath(@__DIR__, "..", "docs", "src", "Martin.md"), String))
+"""
 module Martin
 
+include("cesta.jl")
 include("zaloha.jl")
 include("zalohatext.jl")
 include("zalohaokno.jl")
